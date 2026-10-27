@@ -50,7 +50,7 @@ jobs:
       name: production
       url: https://sorebody.aimuzov.online
     steps:
-      - uses: aimuzov/infra-site-kit/deploy@v4
+      - uses: aimuzov/infra-site-kit/deploy@v5
         with:
           ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
           url: https://sorebody.aimuzov.online

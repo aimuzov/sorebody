@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: aimuzov/infra-site-kit/check@v4
+      - uses: aimuzov/infra-site-kit/check@v5
       # knip: неиспользуемые файлы, экспорты и зависимости. Исключения в knip.json.
       - run: npm run knip
 
