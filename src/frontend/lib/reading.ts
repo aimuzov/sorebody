@@ -105,7 +105,13 @@ export function initReading(root: Element, scroller: HTMLElement | Window, bar: 
 
 			root.toggleAttribute('data-at-start', atStart)
 
-			for (const link of links) link.toggleAttribute('aria-current', !atStart && link.hash === `#${active?.id}`)
+			// Пустой aria-current скринридер читает как false и текущий раздел не объявит
+			for (const link of links) {
+				const current = !atStart && link.hash === `#${active?.id}`
+
+				if (current) link.setAttribute('aria-current', 'location')
+				else link.removeAttribute('aria-current')
+			}
 		},
 		{ scroller, line: ({ top }) => top + box.clientHeight * 0.3 },
 	)

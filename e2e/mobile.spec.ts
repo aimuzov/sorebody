@@ -116,7 +116,7 @@ test('кнопка разделов открывает меню и ведёт к
 	await expect(button).toBeFocused()
 	await expect(page.locator('#symptoms')).toBeInViewport()
 	// Меню уже закрыто, роль скрытой ссылке не достаётся -- ищем по адресу
-	await expect(menu.locator('a[href="#symptoms"]')).toHaveAttribute('aria-current')
+	await expect(menu.locator('a[href="#symptoms"]')).toHaveAttribute('aria-current', 'location')
 
 	await button.tap()
 	await page.keyboard.press('Escape')
