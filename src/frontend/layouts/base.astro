@@ -12,6 +12,7 @@ import '@aimuzov/infra-site-kit/theme-peek.css'
 import '@aimuzov/infra-site-kit/base.css'
 import Metrika from '#frontend/components/metrika.astro'
 import MetrikaPixel from '@aimuzov/infra-site-kit/metrika-pixel.astro'
+import Sentry from '@aimuzov/infra-site-kit/sentry.astro'
 import { site } from '#frontend/data/site.ts'
 import type { SportSlug } from '#frontend/data/sports.ts'
 import { BRAND_GRADIENT_CSS, BRAND_STOP_COUNT } from '#frontend/lib/brand-gradient.ts'
@@ -112,6 +113,7 @@ const canonical = new URL(Astro.props.canonical ?? Astro.url.pathname, Astro.sit
 		<script is:inline set:html={SPORT_TRANSITION} />
 		<ThemeBoot key={THEME_KEY} />
 		{metrika && <Metrika id={site.metrikaId} host={metrikaHost} />}
+		<Sentry />
 		<slot name="head" />
 	</head>
 	<body class={bodyClass}>
