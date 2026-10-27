@@ -1,3 +1,5 @@
+import { watchSection } from '@aimuzov/infra-site-kit/section-spy.js'
+
 import { initFigure3d } from './figure-3d.ts'
 import { keepReadingPlace } from './reading-place.ts'
 import { initSectionLinks } from './section-link.ts'
@@ -82,27 +84,31 @@ export function initReading(root: Element, scroller: HTMLElement | Window, bar: 
 			box.style.setProperty('--logo-visibility', exit >= 24 ? 'hidden' : 'visible')
 			box.style.setProperty('--title-visibility', exit > 12 ? 'visible' : 'hidden')
 		}
-
-		// Активный -- последний раздел, чей верх уже поднялся выше трети экрана
-		const top = scroller instanceof Window ? 0 : scroller.getBoundingClientRect().top
-		const line = top + box.clientHeight * 0.3
-		const active = sections.findLast((s) => s.getBoundingClientRect().top <= line)
-		// Шапка статьи (пункт "Начало") -- не раздел: пока читатель в ней, ни один пункт не текущий,
-		// а сам пункт "Начало" прячет CSS по data-at-start
-		const atStart = active?.id === 'start'
-
-		root.toggleAttribute('data-at-start', atStart)
-
-		for (const link of links) link.toggleAttribute('aria-current', !atStart && link.hash === `#${active?.id}`)
 	}
 	const onScroll = () => {
 		frame ||= requestAnimationFrame(update)
 	}
 
 	scroller.addEventListener('scroll', onScroll, { passive: true })
-	// Первый расчёт -- в следующем кадре: на главной статья в этот момент ещё скрыта, у всех
-	// разделов нулевые координаты, и активным стал бы последний
+	// Первый расчёт -- в следующем кадре: на главной статья в этот момент ещё скрыта,
+	// и у всех разделов нулевые координаты. watchSection из infra-site-kit ниже
+	// тоже ждёт кадра
 	onScroll()
+
+	// Активный -- последний раздел, чей верх уже поднялся выше трети экрана
+	const stopSection = watchSection(
+		sections,
+		(active) => {
+			// Шапка статьи (пункт "Начало") -- не раздел: пока читатель в ней, ни один пункт не текущий,
+			// а сам пункт "Начало" прячет CSS по data-at-start
+			const atStart = active?.id === 'start'
+
+			root.toggleAttribute('data-at-start', atStart)
+
+			for (const link of links) link.toggleAttribute('aria-current', !atStart && link.hash === `#${active?.id}`)
+		},
+		{ scroller, line: ({ top }) => top + box.clientHeight * 0.3 },
+	)
 
 	// Переход к разделу -- из оглавления или ссылкой в тексте, как в пометке "Когда сразу к
 	// врачу", -- плавной прокруткой. Хеш раздела -- в адрес, заменой: ссылку на раздел можно
@@ -140,6 +146,7 @@ export function initReading(root: Element, scroller: HTMLElement | Window, bar: 
 		stopSourcesPeek()
 		stopFigure3d()
 		stopSectionLinks()
+		stopSection()
 		scroller.removeEventListener('scroll', onScroll)
 		root.removeEventListener('click', onClick)
 		cancelAnimationFrame(frame)
