@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.30.0](https://github.com/aimuzov/sorebody/compare/v1.29.2...v1.30.0) (2026-10-27)
+
+
+### Features
+
+* report browser errors to Sentry via infra-site-kit v5.7.0 ([7ec9a42](https://github.com/aimuzov/sorebody/commit/7ec9a42cfce608a3240b0c0f4c9c4d099eaab66b))
+
+
+### Bug Fixes
+
+* **deps:** move to infra-site-kit 5.8.1 ([0dc840b](https://github.com/aimuzov/sorebody/commit/0dc840b9bb7f9f00aae0ce602623490f9bf9de13))
+* **deps:** move to infra-site-kit 5.8.1 ([fab3697](https://github.com/aimuzov/sorebody/commit/fab36973ff01f4e58a1605c14e811bb539200087))
+
 ## [1.29.2](https://github.com/aimuzov/sorebody/compare/v1.29.1...v1.29.2) (2026-10-27)
 
 
