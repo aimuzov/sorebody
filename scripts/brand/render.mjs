@@ -47,8 +47,7 @@ const icon = (size) => `<body style="margin: 0; display: grid; place-items: cent
 	<svg viewBox="0 0 32 32" width="${size * 0.62}" height="${size * 0.62}">${mark(GRAPHITE)}</svg></body>`
 
 // Точки зон на фигуре -- цветами спортов: сайт не про один спорт
-const CROSSFIT = sportOf('crossfit').accent.light
-const PADEL = sportOf('padel').accent.light
+const accent = (slug) => sportOf(slug).accent.light
 const spot = (x, y, color) =>
 	`<svg viewBox="0 0 32 32" width="34" height="34" style="position: absolute; left: ${x - 17}px; top: ${y - 17}px">` +
 	`<circle cx="16" cy="16" r="7.5" fill="${color}" stroke="#ffffff" stroke-width="2"/>` +
@@ -66,7 +65,7 @@ const card = (tagline, lead) => `<body style="margin: 0; width: 1200px; height: 
 	</div>
 	<div style="position: relative">
 		<img src="data:image/png;base64,${poster}" style="position: absolute; height: 600px; top: 30px; left: 0">
-		${spot(128, 182, CROSSFIT)}${spot(222, 300, PADEL)}${spot(146, 436, CROSSFIT)}
+		${spot(209, 180, accent('crossfit'))}${spot(147, 442, accent('football'))}${spot(186, 552, accent('running'))}
 	</div>
 </body>`
 
@@ -94,8 +93,8 @@ await shot(card(site.tagline, LEAD), 1200, 630, `${tmp}/banner.png`, 2)
 
 await shot(
 	card(
-		'Sports injury reference',
-		'How common each injury is in every sport, its symptoms, when to see a doctor and how to adapt training',
+		'Sports pain reference',
+		'How common each kind of pain is in every sport, its symptoms, when to see a doctor and how to adapt training',
 	),
 	1200,
 	630,
