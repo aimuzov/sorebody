@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.29.2](https://github.com/aimuzov/sorebody/compare/v1.29.1...v1.29.2) (2026-10-27)
+
+
+### Bug Fixes
+
+* **brand:** rerender the banner with the genderless figure and pain wording ([52ea701](https://github.com/aimuzov/sorebody/commit/52ea70192a643b7f3bda88a784607800d1f0f18e))
+* **brand:** rerender the banner with the genderless figure and pain wording ([5314eb3](https://github.com/aimuzov/sorebody/commit/5314eb36c0eca9a504fd263fb11a7ce712c07863))
+* **deps:** update astro and svelte ([#214](https://github.com/aimuzov/sorebody/issues/214)) ([a0f959f](https://github.com/aimuzov/sorebody/commit/a0f959ff7cf5e7d4d2f1a5c8afc4c4cabba0e264))
+* **toc:** let screen readers announce the current section ([7ef955e](https://github.com/aimuzov/sorebody/commit/7ef955e6ad93c4b52952c937751e68bf230732f5))
+* **toc:** let screen readers announce the current section ([76d8223](https://github.com/aimuzov/sorebody/commit/76d8223d12acf27c142a968fdaa9cc2be75ce525))
+* update infra-site-kit to v5 and drop the theme peek approach option ([ec576a4](https://github.com/aimuzov/sorebody/commit/ec576a43fe878068675d51ff40f0af5c68c404be))
+* update infra-site-kit to v5 and drop the theme peek approach option ([4b3f6bc](https://github.com/aimuzov/sorebody/commit/4b3f6bcf696784fcb2f7d90eb1df56babeb415c5))
+* update infra-site-kit to v5.5.0 and the CI actions to v5 ([337b542](https://github.com/aimuzov/sorebody/commit/337b542575488509c5afad463d6bb2e470ef1856))
+* update infra-site-kit to v5.5.0 and the CI actions to v5 ([9472097](https://github.com/aimuzov/sorebody/commit/94720974fd59fc4626c295c23951793aad07fecd))
+
 ## [1.29.1](https://github.com/aimuzov/sorebody/compare/v1.29.0...v1.29.1) (2026-10-24)
 
 
