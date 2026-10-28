@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.1](https://github.com/aimuzov/sorebody/compare/v1.30.0...v1.30.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** move to infra-site-kit 5.9.1 with the strict Sentry events ([cdc954b](https://github.com/aimuzov/sorebody/commit/cdc954b2089a045132d128e02f9ec768d8ea2720))
+* **deps:** move to infra-site-kit 5.9.1 with the strict Sentry events ([01560ce](https://github.com/aimuzov/sorebody/commit/01560ceb6e508d8238c458865fd487965a0a09e7))
+
 ## [1.30.0](https://github.com/aimuzov/sorebody/compare/v1.29.2...v1.30.0) (2026-10-27)
 
 
