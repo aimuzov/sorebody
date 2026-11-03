@@ -35,7 +35,7 @@
 		"zod": "4.6.7"
 	},
 	"devDependencies": {
-		"@aimuzov/infra-site-kit": "github:aimuzov/infra-site-kit#v5.9.1",
+		"@aimuzov/infra-site-kit": "github:aimuzov/infra-site-kit#bb8d55077d1124f7186e10564a50ee0f81a1fd48",
 		"@astrojs/check": "0.9.12",
 		"@astrojs/markdown-satteri": "0.4.5",
 		"@astrojs/sitemap": "3.7.4",
