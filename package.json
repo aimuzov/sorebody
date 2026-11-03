@@ -35,12 +35,11 @@
 		"zod": "4.6.7"
 	},
 	"devDependencies": {
-		"@aimuzov/infra-site-kit": "github:aimuzov/infra-site-kit#14960ad3c8c3ebb2243f60eeb1b29eabbf4fedd4",
+		"@aimuzov/infra-site-kit": "github:aimuzov/infra-site-kit#661bf5760d9fda3c0ba6bd35ddb4cbb4537aa929",
 		"@astrojs/check": "0.9.12",
 		"@astrojs/markdown-satteri": "0.4.5",
 		"@astrojs/sitemap": "3.7.4",
 		"@astrojs/svelte": "9.1.1",
-		"@csstools/postcss-global-data": "4.0.0",
 		"@modelcontextprotocol/client": "2.3.1",
 		"@playwright/test": "1.64.1",
 		"@types/node": "26.6.5",
@@ -50,8 +49,6 @@
 		"lucide-static": "1.48.0",
 		"oxlint": "1.87.0",
 		"playwright": "1.64.1",
-		"postcss-custom-media": "12.0.3",
-		"postcss-nested": "8.0.1",
 		"prettier": "3.9.9",
 		"satteri": "0.10.5",
 		"stylelint": "17.16.0",

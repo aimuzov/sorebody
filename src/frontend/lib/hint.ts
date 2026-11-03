@@ -1,14 +1,8 @@
+import { positionTooltip, watchTooltip, type TooltipState } from '@aimuzov/infra-site-kit/tooltip.js'
+
 import { pageWidth } from '#frontend/lib/page-gutter.ts'
 
-const SELECTOR = '[data-hint]'
-
-/**
- * Короткая подпись к значку или ссылке из `data-hint`: та же плашка, что у подсказок статьи
- * (.tip), но одна на всю страницу и только для глаз -- подпись уже есть в aria-label или в тексте.
- * Делегирование на document: элементы, которые дорисовал Svelte, работают без подключения.
- * Показывается мышью и фокусом с клавиатуры; с пальца не нужна: после касания она так и висела
- * бы до следующего тапа. Встаёт над элементом, у верха окна -- под ним, не шире экрана.
- */
+/** Подпись уже есть в aria-label или тексте, поэтому подсказка только для глаз. */
 export function initHints() {
 	const tip = document.createElement('span')
 
@@ -17,80 +11,53 @@ export function initHints() {
 	tip.setAttribute('aria-hidden', 'true')
 	document.body.append(tip)
 
-	let target: HTMLElement | null = null
-	let opening = 0
+	const place = ({ anchor }: TooltipState) => {
+		if (!tip.matches(':popover-open')) return
 
-	const isOpen = () => tip.matches(':popover-open')
-
-	const place = () => {
-		if (!target || !isOpen()) return
-
-		const rect = target.getBoundingClientRect()
+		const rect = anchor.getBoundingClientRect()
 		const { width, height } = tip.getBoundingClientRect()
-		const above = rect.top - height - 8 >= 4
-		const left = rect.left + rect.width / 2 - width / 2
+		const placed = positionTooltip({
+			point: { x: rect.left + rect.width / 2, y: rect.top },
+			bottom: rect.bottom,
+			width,
+			height,
+			viewportWidth: pageWidth(),
+			margin: 16,
+			gap: 8,
+			flip: true,
+			topMargin: 4,
+		})
 
-		tip.dataset.side = above ? 'top' : 'bottom'
-		tip.style.top = `${above ? rect.top - height - 8 : rect.bottom + 8}px`
-		tip.style.left = `${Math.max(16, Math.min(left, pageWidth() - 16 - width))}px`
+		tip.dataset.side = placed.side
+		tip.style.top = `${placed.y}px`
+		tip.style.left = `${placed.x}px`
 	}
+	const stop = watchTooltip({
+		selector: '[data-hint]',
+		content: (anchor) => anchor.dataset.hint,
+		attributes: ['data-hint'],
+		delay: 150,
+		pointerTypes: ['mouse'],
+		focusVisibleOnly: true,
+		ignoreUnrelatedPointer: true,
+		keydown: 'escape',
+		scroll: 'move',
+		resize: 'move',
+		show: (state) => {
+			tip.textContent = state.text
 
-	// Открытая подсказка следит за подписью: кнопка темы меняет её по клику
-	const sync = () => {
-		tip.textContent = target?.dataset.hint ?? ''
-		place()
-	}
-	const watcher = new MutationObserver(sync)
+			if (!tip.matches(':popover-open')) tip.showPopover()
 
-	const hide = () => {
-		clearTimeout(opening)
-		watcher.disconnect()
-		target = null
-
-		if (isOpen()) tip.hidePopover()
-	}
-
-	const show = (element: HTMLElement) => {
-		clearTimeout(opening)
-		target = element
-		watcher.disconnect()
-		watcher.observe(element, { attributeFilter: ['data-hint'] })
-
-		if (!isOpen()) tip.showPopover()
-
-		sync()
-	}
-
-	const hintOf = (node: EventTarget | null) => (node instanceof Element ? node.closest<HTMLElement>(SELECTOR) : null)
-
-	document.addEventListener('pointerover', (event) => {
-		if (event.pointerType !== 'mouse') return
-
-		const element = hintOf(event.target)
-
-		if (!element || element === target) return
-
-		clearTimeout(opening)
-		opening = window.setTimeout(() => show(element), 150)
+			place(state)
+		},
+		hide: () => {
+			if (tip.matches(':popover-open')) tip.hidePopover()
+		},
+		move: place,
 	})
 
-	document.addEventListener('pointerout', (event) => {
-		if (event.pointerType !== 'mouse') return
-
-		const element = hintOf(event.target)
-
-		// Переход между детьми одного элемента -- не уход с него
-		if (element && element !== hintOf(event.relatedTarget)) hide()
-	})
-
-	document.addEventListener('focusin', (event) => {
-		const element = hintOf(event.target)
-
-		if (element?.matches(':focus-visible')) show(element)
-	})
-
-	document.addEventListener('focusout', (event) => hintOf(event.target) === target && hide())
-	addEventListener('keydown', (event) => event.key === 'Escape' && hide())
-	addEventListener('scroll', place, { capture: true, passive: true })
-	addEventListener('resize', place)
+	return () => {
+		stop()
+		tip.remove()
+	}
 }
