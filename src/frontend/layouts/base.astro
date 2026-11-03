@@ -1,4 +1,5 @@
 ---
+import Seo from '@aimuzov/infra-site-kit/seo.astro'
 import { createHash } from 'node:crypto'
 
 import { History, Info } from 'lucide-static'
@@ -90,15 +91,16 @@ const canonical = new URL(Astro.props.canonical ?? Astro.url.pathname, Astro.sit
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>{fullTitle}</title>
-		<meta name="description" content={description} />
-		{index ? <link rel="canonical" href={canonical} /> : <meta name="robots" content="noindex" />}
-		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content={siteTitle} />
-		<meta property="og:locale" content="ru_RU" />
-		<meta property="og:url" content={canonical} />
-		<meta property="og:title" content={fullTitle} />
-		<meta property="og:description" content={description} />
+		<Seo
+			title={fullTitle}
+			description={description}
+			siteName={siteTitle}
+			url={canonical}
+			locale="ru_RU"
+			type="website"
+			canonical={index ? canonical : undefined}
+			robots={index ? undefined : 'noindex'}
+		/>
 		<!-- Картинка превью одна на сайт, её собирает scripts/brand/render.mjs -->
 		<meta property="og:image" content={new URL('/brand/og.png', Astro.site)} />
 		<meta property="og:image:width" content="1200" />

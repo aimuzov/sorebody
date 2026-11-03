@@ -1,3 +1,5 @@
+import { pageTitle as sharedPageTitle } from '@aimuzov/infra-site-kit/title.js'
+
 import { site } from '#frontend/data/site.ts'
 
 /** Название сайта с дескриптором: `og:site_name` и заголовок страницы без своего названия. */
@@ -5,7 +7,7 @@ export const siteTitle = `${site.name} — ${site.tagline}`
 
 /** Заголовок страницы: своё название и через тире название сайта. */
 export function pageTitle(title?: string) {
-	return title ? `${title} — ${site.name}` : siteTitle
+	return sharedPageTitle(title, { siteName: site.name, homeTitle: siteTitle })
 }
 
 /**
