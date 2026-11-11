@@ -8,6 +8,10 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      build_only:
+        description: Publish candidate images without deploying
+        type: boolean
+        default: false
       tag:
         description: Release tag to deploy, e.g. v1.2.0. Empty deploys the newest main.
         required: false
@@ -42,7 +46,7 @@ jobs:
     # `!cancelled()`, а не `always()`: job идёт и при пропущенных release и check
     # (ручной запуск), но отменённый прогон не деплоит.
     if: >-
-      !cancelled() && vars.DEPLOY_ENABLED == 'true' &&
+      !cancelled() && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_FROM_GHCR != 'true' && !inputs.build_only &&
       (github.event_name == 'workflow_dispatch' || needs.check.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -56,3 +60,57 @@ jobs:
           url: https://sorebody.aimuzov.online
           health-url: https://sorebody.aimuzov.online/api/health
           ref: ${{ needs.release.outputs.tag || inputs.tag }}
+
+  build-site:
+    needs: [release, check]
+    if: >-
+      !cancelled() && (inputs.build_only || (vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_FROM_GHCR == 'true' && (needs.release.outputs.tag || inputs.tag) != '' && (github.event_name == 'workflow_dispatch' || needs.check.result == 'success')))
+    permissions:
+      contents: read
+      packages: write
+    uses: aimuzov/infra-ci/.github/workflows/build-image.yml@3e762ccf913fdea02f1e43312270c7a4a7e9d335
+    with:
+      ref: ${{ needs.release.outputs.tag || inputs.tag || github.sha }}
+      image-suffix: '-site'
+      dockerfile: deploy/frontend.Dockerfile
+    secrets:
+      build-env: |-
+        PUBLIC_SENTRY_DSN=${{ vars.PUBLIC_SENTRY_DSN }}
+
+  build-api:
+    needs: [release, check]
+    if: >-
+      !cancelled() && (inputs.build_only || (vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_FROM_GHCR == 'true' && (needs.release.outputs.tag || inputs.tag) != '' && (github.event_name == 'workflow_dispatch' || needs.check.result == 'success')))
+    permissions:
+      contents: read
+      packages: write
+    uses: aimuzov/infra-ci/.github/workflows/build-image.yml@3e762ccf913fdea02f1e43312270c7a4a7e9d335
+    with:
+      ref: ${{ needs.release.outputs.tag || inputs.tag || github.sha }}
+      image-suffix: '-api'
+      dockerfile: deploy/backend.Dockerfile
+
+  deploy-registry:
+    needs: [release, build-site, build-api]
+    if: >-
+      !cancelled() && !inputs.build_only && needs.build-site.result == 'success' && needs.build-api.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - id: request
+        env:
+          TAG: ${{ needs.release.outputs.tag || inputs.tag }}
+          REVISION: ${{ needs.build-site.outputs.revision }}
+          IMAGE_SITE: ${{ needs.build-site.outputs.image }}
+          IMAGE_API: ${{ needs.build-api.outputs.image }}
+          API_REVISION: ${{ needs.build-api.outputs.revision }}
+        run: |
+          [[ "$REVISION" == "$API_REVISION" ]]
+          printf 'value=images %s %s %s\n' "$TAG" "$REVISION" "${IMAGE_SITE##*@} ${IMAGE_API##*@}" >> "$GITHUB_OUTPUT"
+      - uses: aimuzov/infra-site-kit/deploy@v5
+        with:
+          ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          url: https://sorebody.aimuzov.online/
+          health-url: https://sorebody.aimuzov.online/api/health
+          ref: ${{ steps.request.outputs.value }}

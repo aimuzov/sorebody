@@ -6,7 +6,7 @@
 FROM node:26.11.1-alpine AS knowledge
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund --loglevel=error
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund --loglevel=error
 COPY . .
 RUN npm run build
 
@@ -15,7 +15,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 # В dependencies только то, что нужно API: Astro и линтеры живут в devDependencies.
-RUN npm ci --omit=dev --no-audit --no-fund --loglevel=error
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --no-audit --no-fund --loglevel=error
 COPY src/shared ./src/shared
 COPY src/backend ./src/backend
 COPY --from=knowledge /app/dist/knowledge.json ./dist/knowledge.json
