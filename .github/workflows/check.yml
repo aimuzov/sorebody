@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  id-token: write
 
 jobs:
   # Форматирование, линтеры, типы, юнит-тесты, сборка и ченжлог: браузер не нужен
@@ -16,9 +18,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Reuse verified CI
+        id: verified
+        uses: aimuzov/infra-ci/reuse-check@v1
+        continue-on-error: true
+        with:
+          workflow: .github/workflows/check.yml
       - uses: aimuzov/infra-site-kit/check@v5
+        if: steps.verified.outputs.reused != 'true'
       # knip: неиспользуемые файлы, экспорты и зависимости. Исключения в knip.json.
       - run: npm run knip
+        if: steps.verified.outputs.reused != 'true'
+      - name: Record verified CI
+        if: github.event_name == 'pull_request' && steps.verified.outputs.reused != 'true'
+        uses: aimuzov/infra-ci/record-check@v1
+        continue-on-error: true
+        with:
+          workflow: .github/workflows/check.yml
 
   # e2e из infra-site-kit -- три четверти всего времени, поэтому параллельно по шардам.
   # Тесты раскладывает e2e/shard.ts: обход sitemap делится поровну. Сайт собирается в каждом
@@ -36,18 +52,37 @@ jobs:
         shard: [1, 2, 3, 4]
     name: e2e (${{ matrix.shard }}/4)
     steps:
+      - name: Reuse verified CI
+        id: verified
+        uses: aimuzov/infra-ci/reuse-check@v1
+        continue-on-error: true
+        with:
+          workflow: .github/workflows/check.yml
+          matrix: ${{ toJSON(matrix) }}
       - uses: actions/checkout@v5
+        if: steps.verified.outputs.reused != 'true'
       - uses: actions/setup-node@v5
         with:
           node-version-file: package.json
           cache: npm
+        if: steps.verified.outputs.reused != 'true'
       - run: npm ci
+        if: steps.verified.outputs.reused != 'true'
       # Разошлись образ и @playwright/test: в образе нет браузера нужной ревизии,
       # падаем сразу, а не после сборки сайта.
       - run: |
           browser=$(node -p "require('@playwright/test').chromium.executablePath()")
           test -x "$browser" || { echo "::error::Нет $browser: подними тег образа Playwright до версии @playwright/test"; exit 1; }
+        if: steps.verified.outputs.reused != 'true'
       - run: npx playwright test --shard=${{ matrix.shard }}/4
+        if: steps.verified.outputs.reused != 'true'
+      - name: Record verified CI
+        if: github.event_name == 'pull_request' && steps.verified.outputs.reused != 'true'
+        uses: aimuzov/infra-ci/record-check@v1
+        continue-on-error: true
+        with:
+          workflow: .github/workflows/check.yml
+          matrix: ${{ toJSON(matrix) }}
 
   # Обязательная проверка веток в ruleset -- `check`: итог всех джоб под прежним именем
   check:
