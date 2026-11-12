@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.31.0](https://github.com/aimuzov/sorebody/compare/v1.30.1...v1.31.0) (2026-11-12)
+
+
+### Features
+
+* **deploy:** publish Sorebody images in GitHub Actions ([#234](https://github.com/aimuzov/sorebody/issues/234)) ([4482a34](https://github.com/aimuzov/sorebody/commit/4482a34a01769b53d41000405efd306274e0b3ed))
+
+
+### Bug Fixes
+
+* include missing-referrer navigation guard ([a712041](https://github.com/aimuzov/sorebody/commit/a7120418e822c0c7a35267e318f74242c463c79a))
+* pin completed back-link cleanup ([8d019c8](https://github.com/aimuzov/sorebody/commit/8d019c89de4888dec099e792144f8011f18b7402))
+* pin corrected site-kit back navigation ([dfb1b30](https://github.com/aimuzov/sorebody/commit/dfb1b30667b9abffad40334762dc88cde542fbea))
+* use merged site-kit Escape helpers ([1abf6f8](https://github.com/aimuzov/sorebody/commit/1abf6f8e3370817ff0001da98804e3bf92c04695))
+
 ## [1.30.1](https://github.com/aimuzov/sorebody/compare/v1.30.0...v1.30.1) (2026-10-28)
 
 
