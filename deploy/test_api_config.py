@@ -2,6 +2,7 @@ import importlib.util
 import json
 import pathlib
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -25,6 +26,20 @@ class ApiConfigTest(unittest.TestCase):
             "CHAT_DIALOGS_PER_DAY": "40",
             "CHAT_DOLLARS_PER_DAY": "1.5",
         }
+
+    def test_workflow_payload_can_be_read_by_receiver(self):
+        workflow = pathlib.Path(__file__).parents[1] / ".github/workflows/deploy.yml"
+        producer = re.search(r"python3 -c '([^']+)'", workflow.read_text()).group(1)
+        result = subprocess.run(
+            [sys.executable, "-c", producer],
+            env={**os.environ, **self.config}, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), self.config)
+        with tempfile.TemporaryDirectory() as directory:
+            target = pathlib.Path(directory) / "api.env"
+            self.module.write_config(result.stdout, target)
+            self.assertIn("CHAT_ENABLED='1'", target.read_text())
 
     def test_replaces_config_with_private_file_and_literal_values(self):
         with tempfile.TemporaryDirectory() as directory:

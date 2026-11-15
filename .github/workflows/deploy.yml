@@ -153,6 +153,6 @@ jobs:
           python3 -c 'import json, os; print(json.dumps({key: os.environ[key] for key in (
             "OPENROUTER_API_KEY", "CHAT_ENABLED", "CHAT_MODEL", "CHAT_ORIGINS",
             "CHAT_PER_MINUTE", "CHAT_PER_DAY", "CHAT_DIALOGS_PER_DAY", "CHAT_DOLLARS_PER_DAY"
-          )})))' | ssh -i ~/.ssh/api-config -o IdentitiesOnly=yes -o BatchMode=yes \
+          )}))' | ssh -i ~/.ssh/api-config -o IdentitiesOnly=yes -o BatchMode=yes \
             -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
             root@141.133.188.169 configure-api
