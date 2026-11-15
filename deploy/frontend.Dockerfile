@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund --loglevel=
 COPY . .
 # `.env` приходит секретом сборки: переменные нужны во время сборки,
 # но сам файл не остаётся в слоях образа.
-RUN --mount=type=secret,id=env,target=/app/.env npm run build
+RUN --mount=type=secret,id=env,target=/app/.env node --env-file=.env node_modules/astro/bin/astro.mjs build
 
 FROM nginx:1.29-alpine
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
