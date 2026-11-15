@@ -80,6 +80,7 @@ jobs:
     secrets:
       build-env: |-
         PUBLIC_SENTRY_DSN=${{ vars.PUBLIC_SENTRY_DSN }}
+        CHAT=${{ vars.CHAT }}
 
   build-api:
     needs: [release, check]
