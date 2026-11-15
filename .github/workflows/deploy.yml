@@ -44,11 +44,11 @@ jobs:
   # Включается переменной репозитория `DEPLOY_ENABLED=true`,
   # которой у самого infra-site-template нет.
   deploy:
-    needs: [release, check]
+    needs: [release, check, configure-api]
     # `!cancelled()`, а не `always()`: job идёт и при пропущенных release и check
     # (ручной запуск), но отменённый прогон не деплоит.
     if: >-
-      !cancelled() && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_FROM_GHCR != 'true' && !inputs.build_only &&
+      !cancelled() && needs.configure-api.result == 'success' && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_FROM_GHCR != 'true' && !inputs.build_only &&
       (github.event_name == 'workflow_dispatch' || needs.check.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -80,6 +80,7 @@ jobs:
     secrets:
       build-env: |-
         PUBLIC_SENTRY_DSN=${{ vars.PUBLIC_SENTRY_DSN }}
+        CHAT=${{ vars.CHAT }}
 
   build-api:
     needs: [release, check]
@@ -97,9 +98,10 @@ jobs:
       dockerfile: deploy/backend.Dockerfile
 
   deploy-registry:
-    needs: [release, build-site, build-api]
+    needs: [release, build-site, build-api, configure-api]
     if: >-
-      !cancelled() && !inputs.build_only && needs.build-site.result == 'success' && needs.build-api.result == 'success'
+      !cancelled() && !inputs.build_only && needs.configure-api.result == 'success' &&
+      needs.build-site.result == 'success' && needs.build-api.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -120,3 +122,37 @@ jobs:
           url: https://sorebody.aimuzov.online/
           health-url: https://sorebody.aimuzov.online/api/health
           ref: ${{ steps.request.outputs.value }}
+
+  configure-api:
+    needs: [release, check]
+    if: >-
+      !cancelled() && vars.DEPLOY_ENABLED == 'true' && !inputs.build_only &&
+      (github.event_name == 'workflow_dispatch' || needs.check.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    environment: production
+    steps:
+      - name: Deliver API configuration
+        env:
+          SSH_KEY: ${{ secrets.API_CONFIG_SSH_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CHAT_ENABLED: ${{ vars.CHAT_ENABLED }}
+          CHAT_MODEL: ${{ vars.CHAT_MODEL }}
+          CHAT_ORIGINS: ${{ vars.CHAT_ORIGINS }}
+          CHAT_PER_MINUTE: ${{ vars.CHAT_PER_MINUTE }}
+          CHAT_PER_DAY: ${{ vars.CHAT_PER_DAY }}
+          CHAT_DIALOGS_PER_DAY: ${{ vars.CHAT_DIALOGS_PER_DAY }}
+          CHAT_DOLLARS_PER_DAY: ${{ vars.CHAT_DOLLARS_PER_DAY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          install -m 700 -d ~/.ssh
+          trap 'rm -f ~/.ssh/api-config' EXIT
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/api-config
+          printf '%s\n' '141.133.188.169 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINnRXayyFSNqYxBbGbHCh60Y6jUyhLT47gwSeoqQRvsd' > ~/.ssh/known_hosts
+          python3 -c 'import json, os; print(json.dumps({key: os.environ[key] for key in (
+            "OPENROUTER_API_KEY", "CHAT_ENABLED", "CHAT_MODEL", "CHAT_ORIGINS",
+            "CHAT_PER_MINUTE", "CHAT_PER_DAY", "CHAT_DIALOGS_PER_DAY", "CHAT_DOLLARS_PER_DAY"
+          )})))' | ssh -i ~/.ssh/api-config -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            root@141.133.188.169 configure-api

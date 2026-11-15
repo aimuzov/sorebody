@@ -93,11 +93,17 @@ Safari на iPhone сам приближает страницу, когда вс
 
 ## Выкладка
 
-Сервер проектов из [infra-server](https://github.com/aimuzov/infra-server): мерж релизного PR, который ведёт release-please, запускает `deploy.yml`, он гоняет проверки и заходит по SSH. Шаги обоих берутся из [infra-site-kit](https://github.com/aimuzov/infra-site-kit), там же адрес сервера и его строка `known_hosts`. Там ключ запускает общий [`deploy/site.sh`](https://github.com/aimuzov/infra-server/blob/main/deploy/site.sh) из infra-server, который переключается на релизный тег и пересобирает контейнер `sorebody` (nginx со статикой) из [`deploy/docker-compose.yml`](deploy/docker-compose.yml). Сборка идёт в юните systemd, так что оборванное SSH-соединение её не прерывает. Домен и TLS держит общий Caddy. `.env` (переменные сборки) и `api.env` (ключ OpenRouter и настройки чата на сайте, образец — `api.env.example`) лежат на сервере в `/srv/sorebody`.
+При `DEPLOY_FROM_GHCR=true` GitHub Actions собирает образы сайта и API и публикует их в GHCR. Ограниченный deploy-ключ запускает [`infra-server/deploy/site.sh`](https://github.com/aimuzov/infra-server/blob/main/deploy/site.sh): он проверяет ревизии образов, обновляет контейнеры через systemd и сохраняет образы для отката. Общий Caddy обслуживает домен и TLS.
 
 Job выкладки запускается, только когда переменная репозитория `DEPLOY_ENABLED` равна `true`, а SSH-ключ лежит в секрете `DEPLOY_SSH_KEY`. Пока сервер не готов, релиз гоняет одни проверки.
 
 Быстро откатиться — запустить Release вручную с прошлым тегом: `gh workflow run deploy.yml -f tag=v1.2.3`. Исправление плохого коммита выезжает через релизный PR, как любое изменение.
+
+Настройки продакшена хранятся в GitHub Actions Variables. `CHAT` и `PUBLIC_SENTRY_DSN` передаются в сборку сайта. `CHAT_ENABLED`, `CHAT_MODEL`, `CHAT_ORIGINS` и лимиты `CHAT_*` задают настройки API.
+
+`OPENROUTER_API_KEY` и `API_CONFIG_SSH_KEY` хранятся в Actions Secrets. Перед деплоем CI передаёт настройки по SSH. Приёмник принимает только известные ключи и атомарно заменяет `/srv/sorebody/api.env` с правами `0600`.
+
+Приёмник `deploy/api-config.py` устанавливается от root в `/usr/local/lib/sorebody/api-config.py`. Его SSH-ключ ограничен записью в `authorized_keys`: `command="/usr/bin/python3 /usr/local/lib/sorebody/api-config.py",restrict`. Контейнеры получают настройки при следующем деплое. Для локальной разработки остаются файлы-примеры env.
 
 ### Страница «Что нового»
 
