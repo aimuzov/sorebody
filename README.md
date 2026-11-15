@@ -95,11 +95,17 @@ The build puts a CSP with hashes of Astro's scripts and styles into every page (
 
 ## Deployment
 
-The projects server from [infra-server](https://github.com/aimuzov/infra-server): merging the release PR that release-please keeps open runs `deploy.yml`, which runs the checks and logs in over SSH. The steps of both come from [infra-site-kit](https://github.com/aimuzov/infra-site-kit), which also holds the server address and its `known_hosts` line. There the key runs the shared [`deploy/site.sh`](https://github.com/aimuzov/infra-server/blob/main/deploy/site.sh) of infra-server, which checks out the release tag and rebuilds the `sorebody` container (nginx with the static site) from [`deploy/docker-compose.yml`](deploy/docker-compose.yml). The build runs in a systemd unit, so a dropped SSH connection does not cut it short. The domain and TLS are handled by the shared Caddy. `.env` (build variables) and `api.env` (the OpenRouter key and settings of the site chat, see `api.env.example`) live on the server in `/srv/sorebody`.
+With `DEPLOY_FROM_GHCR=true`, GitHub Actions builds the site and API images and publishes them to GHCR. The restricted deploy key starts [`infra-server/deploy/site.sh`](https://github.com/aimuzov/infra-server/blob/main/deploy/site.sh), which verifies image revisions, updates containers through systemd and retains rollback images. Shared Caddy serves the domain and TLS.
 
 The deploy job runs only when the repository variable `DEPLOY_ENABLED` is `true`, and the SSH key is the `DEPLOY_SSH_KEY` secret. Until the server is set up, a release only runs the checks.
 
 To roll back fast, run Release by hand with the previous tag: `gh workflow run deploy.yml -f tag=v1.2.3`. A fix of the bad commit goes out through the release PR like any change.
+
+Production settings live in GitHub Actions Variables. `CHAT` and `PUBLIC_SENTRY_DSN` go into site builds. `CHAT_ENABLED`, `CHAT_MODEL`, `CHAT_ORIGINS` and `CHAT_*` quota variables configure the API.
+
+`OPENROUTER_API_KEY` and `API_CONFIG_SSH_KEY` are Actions Secrets. Before deployment, CI sends settings over SSH. The receiver only accepts known keys and atomically replaces `/srv/sorebody/api.env` with mode `0600`.
+
+Install `deploy/api-config.py` as a root-owned file at `/usr/local/lib/sorebody/api-config.py`. Restrict the dedicated key in `authorized_keys`: `command="/usr/bin/python3 /usr/local/lib/sorebody/api-config.py",restrict`. Settings reach containers on the next deployment. Local development uses the example env files.
 
 ### What's new page
 

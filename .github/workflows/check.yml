@@ -29,6 +29,8 @@ jobs:
       # knip: неиспользуемые файлы, экспорты и зависимости. Исключения в knip.json.
       - run: npm run knip
         if: steps.verified.outputs.reused != 'true'
+      - run: python3 -m unittest discover -s deploy -p 'test_*.py'
+        if: steps.verified.outputs.reused != 'true'
       - name: Record verified CI
         if: github.event_name == 'pull_request' && steps.verified.outputs.reused != 'true'
         uses: aimuzov/infra-ci/record-check@v1
